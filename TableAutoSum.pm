@@ -9,7 +9,7 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.06';
+our $VERSION = '0.07';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
@@ -180,6 +180,16 @@ sub totalresult {
     return _calc_data( map {values %$_} values %{$self->{data}} );
 }
 
+sub contains_row {
+    my ($self, $row) = @_;
+    $self->{rowset}->contains($row);
+}
+
+sub contains_col {
+    my ($self, $col) = @_;
+    $self->{colset}->contains($col);
+}
+
 1;
 __END__
 =head1 NAME
@@ -337,6 +347,10 @@ The value of the cell in row i, column j is calculated with
 Note that both tables have to be of the same dimension.
 Also the row/column names have to be the same ones.
 
+=item $table->contains_row($row), $table->contains_col($col)
+
+Does what you would expect.
+
 =back
 
 =head2 EXPORT
@@ -405,6 +419,12 @@ Something like
 Quite an insert_subtable method seems sensful, too.
 
 =item increase speed of store/read
+
+=item add_row, add_col, insert_row, insert_col
+
+These functions would be quite convenient.
+
+=item clone
 
 =back     
 

@@ -1,5 +1,8 @@
 Revision history for Perl extension Data::TableAutoSum.
 
+0.07  Thu Aug 08
+        - implemented contains_row and contains_col methods
+
 0.06  The Aug 01
         - implemented merge operation to merge two tables
         - refacturing: used Tie::CSV_File to implement the store and read methods

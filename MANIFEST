@@ -12,3 +12,4 @@ t/as_string.t
 t/store_read.t
 t/change.t
 t/merge.t
+t/contains_row_col.t

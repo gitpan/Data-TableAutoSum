@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.06
+Data/TableAutoSum version 0.07
 ==============================
 
 INSTALLATION
@@ -65,7 +65,7 @@ REQUIREMENTS
        Test::Builder
 
 SEE ALSO
-    Data::Xtab, Data::Pivot, Table::Pivoter
+    Data::Xtab, Data::Pivot, Table::Pivoter, AnyData
 
 AUTHOR
     Janek Schleicher, <bigj@kamelfreund.de>
