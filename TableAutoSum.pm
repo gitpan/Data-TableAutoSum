@@ -9,13 +9,14 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.07';
+our $VERSION = '0.08';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
 use Set::Scalar;
 use List::Util qw/reduce/;
 use Tie::CSV_File;
+use Data::Compare;
 
 sub implies($$) {
     my ($x, $y) = @_;
@@ -190,6 +191,18 @@ sub contains_col {
     $self->{colset}->contains($col);
 }
 
+sub is_equal {
+    my ($self, $other) = @_;
+    Compare( [$self->rows], [$other->rows] ) &&
+    Compare( [$self->cols], [$other->cols] ) or return 0;
+    foreach my $row ($self->rows) {
+        foreach my $col ($self->cols) {
+            $self->data($row,$col) == $other->data($row,$col) or return 0;
+        }
+    }
+    1;
+}
+
 1;
 __END__
 =head1 NAME
@@ -351,6 +364,12 @@ Also the row/column names have to be the same ones.
 
 Does what you would expect.
 
+=item $table->is_equal($other_table)
+
+Please note, that it is an object method (not a static class method)
+and you only can compare one table to another table,
+both of type TableAutoSum.
+
 =back
 
 =head2 EXPORT
@@ -426,6 +445,10 @@ These functions would be quite convenient.
 
 =item clone
 
+=item as_array
+
+It would return the table representation from an array.
+
 =back     
 
 =head1 REQUIREMENTS
@@ -436,6 +459,7 @@ These functions would be quite convenient.
    List::Util 
    Tie::File
    Tie::CSV_File
+   Data::Compare
        
    Math::Random            # for the tests
    Set::CrossProduct  
