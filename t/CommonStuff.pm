@@ -3,13 +3,15 @@ use Test::More;
 use Test::Builder;
 use Set::CrossProduct;
 
+$Data::Dumper::Indent = undef;
+
 use constant STANDARD_DIM => ([    1,    1],
                               [    1,    2],
                               [    2,    1],
                               [    2,    2],
                               [    1, 1_000],
                               [1_000,     1],
-                              [   25,    75]);
+                              [   25,    50]);
                               
 my $Tester = Test::Builder->new();
 

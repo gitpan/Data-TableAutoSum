@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.05
+Data/TableAutoSum version 0.06
 ==============================
 
 INSTALLATION
@@ -38,6 +38,15 @@ SYNOPSIS
 
       $table->store('random.dat');
       my $old_random_data = Data::TableAutoSum->read('random.dat');
+      
+      # or thinking, we have generated a 
+      # table for the population( [cities], [centre, suburb] )
+      # and a similar table with the crimes( [cities], [centre, suburb] )
+      # we can calculate the crimes per citizen with
+      $crime_rate = Data::TableAutoSum->merge(
+         sub {shift() / shift()}, $crimes, $population
+      );
+      
 
 REQUIREMENTS
        Params::Validate
@@ -45,6 +54,7 @@ REQUIREMENTS
        Set::Scalar
        List::Util 
        Tie::File
+       Tie::CSV_File
        
        Math::Random            # for the tests
        Set::CrossProduct  

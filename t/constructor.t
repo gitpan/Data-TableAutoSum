@@ -8,8 +8,6 @@ use List::Util qw/sum/;
 use Test::More;
 use t'CommonStuff;
 
-$Data::Dumper::Indent = undef;
-
 sub test_construct_table {
     my %arg = @_;
     my $arg = substr Dumper(\%arg), 0, 50;

@@ -11,6 +11,7 @@ WriteMakefile(
        Set::Scalar        => 0,
        List::Util         => 0,
        Tie::File          => 0,
+       Tie::CSV_File      => 0.06,
        
        Math::Random       => 0,     # for the tests
        Set::CrossProduct  => 0,

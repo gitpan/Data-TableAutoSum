@@ -9,13 +9,13 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.05';
+our $VERSION = '0.06';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
 use Set::Scalar;
 use List::Util qw/reduce/;
-use Tie::File;
+use Tie::CSV_File;
 
 sub implies($$) {
     my ($x, $y) = @_;
@@ -115,18 +115,19 @@ sub store {
 
 sub read {
     my ($class, $filename) = @_;
-    tie my @data, 'Tie::File', $filename
-        or die "Can't open $filename to read the table: $!";
+    tie my @data, 'Tie::CSV_File', $filename, sep_char     => "\t",
+                                              quote_char   => undef,
+                                              escape_char  => undef;
+
     
-    my @header       = split /\t/, $data[0];
+    my @header       = @{ $data[0] };
     my @col = @header[1 .. $#header-1];
-    my @row = map {/^([^\t]*)\t/} map {$data[$_]} (1 .. $#data-1); 
+    my @row = map {$data[$_]->[0]} (1 .. $#data-1); 
     my $table        = $class->new(rows => \@row, cols => \@col);
     
     foreach my $i (0 .. $#row) {
-        my @line = split /\t/, $data[$i+1];
         foreach my $j (0 .. $#col) {
-            $table->data($row[$i],$col[$j]) = $line[$j+1];
+            $table->data($row[$i],$col[$j]) = $data[$i+1][$j+1];
         }
     }
         
@@ -143,6 +144,19 @@ sub change {
             $self->data($row,$col) = $_;
         }
     }
+}
+
+sub merge {
+    my ($class, $sub, $table1, $table2) = @_;
+    my @row = $table1->rows;
+    my @col = $table1->cols;
+    my $merged = $class->new(rows => \@row, cols => \@col);
+    foreach my $i (@row) {
+        foreach my $j (@col) {
+            $merged->data($i,$j) = $sub->($table1->data($i,$j), $table2->data($i,$j));
+        }
+    }
+    return $merged;
 }
 
 sub _calc_data {
@@ -199,6 +213,14 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
 
   $table->store('random.dat');
   my $old_random_data = Data::TableAutoSum->read('random.dat');
+  
+  # or thinking, we have generated a 
+  # table for the population( [cities], [centre, suburb] )
+  # and a similar table with the crimes( [cities], [centre, suburb] )
+  # we can calculate the crimes per citizen with
+  $crime_rate = Data::TableAutoSum->merge(
+    sub {shift() / shift()}, $crimes, $population
+  );
 
 =head1 ABSTRACT
 
@@ -304,6 +326,17 @@ Note that you have to change C<$_>,
 so C<$table->change(sub {$_ *= 2})> doubles every element,
 while C<$table->change(sub { 2 * $_ })> doesn't change anything.
 
+=item $table->merge(CODE, Data::TableAutoSum, Data::TableAutoSum)
+
+Creates a new table,
+which values depends on the values of two other tables.
+The value of the cell in row i, column j is calculated with
+
+  $new_table->data($i,$j) = $sub->($table1->data($i,$j), $table2->data($i,$j);
+  
+Note that both tables have to be of the same dimension.
+Also the row/column names have to be the same ones.
+
 =back
 
 =head2 EXPORT
@@ -346,14 +379,6 @@ at the moment, only '+' is used.
 I'd like to give the possibility to use any other distributive, associative 
 operation.
 
-=item merge
-
-A static merging method,
-that combines two table sets, like
-
-  my $population = Data::TableAutoSum::merge(sub {$a + $b},
-                                             $female_population,
-                                             $male_population);
 =item overloaded operators
 
 Some operators should be overloaded.
@@ -390,6 +415,7 @@ Quite an insert_subtable method seems sensful, too.
    Set::Scalar
    List::Util 
    Tie::File
+   Tie::CSV_File
        
    Math::Random            # for the tests
    Set::CrossProduct  
