@@ -43,12 +43,14 @@ sub test_out_of_range_exception {
                 "data($good_row,wrong) for a $r x $c table";
 }
 
-use constant SET_AND_GET_TESTS  => 3 * scalar(STANDARD_DIM);
+use constant SET_AND_GET_TESTS  => 3 * 2 * scalar(STANDARD_DIM);
 use constant OUT_OF_RANGE_TESTS => 2 * scalar(STANDARD_DIM);
     
 use Test::More tests => SET_AND_GET_TESTS + OUT_OF_RANGE_TESTS;
 foreach (STANDARD_DIM) {
     my %arg = (rows => $_->[0], cols => $_->[1]);
     test_set_and_get_data(%arg);
+    test_set_and_get_data(rows => [_named_rows $_->[0]],
+                          cols => [_named_cols $_->[1]]);
     test_out_of_range_exception(%arg);
 }

@@ -1,6 +1,5 @@
 package Data::TableAutoSum;
 
-use 5.008;
 use strict;
 use warnings;
 
@@ -10,7 +9,7 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
@@ -18,26 +17,53 @@ use Set::Scalar;
 use List::Util qw/reduce/;
 use Tie::File;
 
+sub implies($$) {
+    my ($x, $y) = @_;
+    return !$x || ($x && $y);
+}
+
+sub is_uniq(@) {
+    my %items;
+    foreach (@_) {
+        return 0 if $items{$_}++;
+    }
+    return 1;
+}
+
 use constant ROW_COL_TYPE => {
-    type      => SCALAR,
-    callbacks =>  {'integer'        => sub { shift() =~ $RE{num}{int} },
-                   'greater than 0' => sub { shift() > 0 }}
+    type      => SCALAR | ARRAYREF,
+    callbacks =>  {
+        # scalar value
+        'integer'          => sub { implies !ref($_[0]) => $_[0] =~ $RE{num}{int} },
+        'greater than 0'   => sub { implies !ref($_[0]) => ($_[0] > 0) },
+        
+        # array ref
+        'uniq identifiers' => sub { no strict 'refs';
+                                    implies ref($_[0])  => is_uniq @{$_[0]} },
+        'some identifiers' => sub { no strict 'refs';
+                                    implies ref($_[0])  => @{$_[0]} }
+    }
 };
 
 sub new {
     my $proto = shift;
     my %arg = validate( @_ => {rows => ROW_COL_TYPE, cols => ROW_COL_TYPE} );
     my $class = ref($proto) || $proto;
-    my @rows = (0 .. $arg{rows}-1);
-    my @cols = (0 .. $arg{cols}-1);
+    my @rows = ref($arg{rows}) ? @{$arg{rows}} : (0 .. $arg{rows}-1);
+    my @cols = ref($arg{cols}) ? @{$arg{cols}} : (0 .. $arg{cols}-1);
+    my %data;
+    foreach my $row (@rows) {
+        foreach my $col (@cols) {
+            $data{$row}->{$col} = 0;
+        }
+    }
     my $self = {
         rows   => \@rows,
         rowset => Set::Scalar->new(@rows),
         cols   => \@cols,
         colset => Set::Scalar->new(@cols),
-        data   => [map [(0) x $arg{cols}], 0..$arg{rows}]
+        data   => \%data
     };
-    $self->{rowset} = Set::Scalar->new(@{$self->{rows}});
     bless $self, $class;
 }
 
@@ -62,8 +88,8 @@ sub data : lvalue {
         },
         0
     );
-    $self->{data}->[$row]->[$col] = $value if defined $value;
-    $self->{data}->[$row]->[$col];
+    $self->{data}->{$row}->{$col} = $value if defined $value;
+    $self->{data}->{$row}->{$col};
 }
 
 sub as_string {
@@ -92,15 +118,15 @@ sub read {
     tie my @data, 'Tie::File', $filename
         or die "Can't open $filename to read the table: $!";
     
-    my $nr_of_rows   = @data - 2;  # first line is header, last are sums
     my @header       = split /\t/, $data[0];
-    my $nr_of_cols   = @header - 2;  # 1st col is row names, last are sums
-    my $table        = $class->new(rows => $nr_of_rows, cols => $nr_of_cols);
+    my @col = @header[1 .. $#header-1];
+    my @row = map {/^([^\t]*)\t/} map {$data[$_]} (1 .. $#data-1); 
+    my $table        = $class->new(rows => \@row, cols => \@col);
     
-    foreach my $row ($table->rows) {
-        my @line = split /\t/, $data[$row+1];
-        foreach my $col ($table->cols) {
-            $table->data($row,$col) = $line[$col+1];
+    foreach my $i (0 .. $#row) {
+        my @line = split /\t/, $data[$i+1];
+        foreach my $j (0 .. $#col) {
+            $table->data($row[$i],$col[$j]) = $line[$j+1];
         }
     }
         
@@ -126,7 +152,7 @@ sub colresult {
 
 sub totalresult {
     my $self = shift;
-    return _calc_data( map {@$_} @{$self->{data}} );
+    return _calc_data( map {values %$_} values %{$self->{data}} );
 }
 
 1;
@@ -139,7 +165,10 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
 
   use Data::TableAutoSum;
   
-  my $table = Data::TableAutoSum->new(rows => 10, cols => 20);
+  my $table = Data::TableAutoSum->new(rows => 10, cols => 20); 
+  # or
+  my $table = Data::TableAutoSum->new(rows => ['New York', 'L.A.', 'Chicago'],
+                                      cols => ['Women', 'Men', 'Alien']);
   foreach my $row ($table->rows()) {
      foreach my $col ($table->cols()) {
         $table->data($row,$col) = rand();
@@ -169,13 +198,14 @@ This module represents a table with automatic calculation of the row/column sums
 
 =over
 
-=item new(rows => $nr_of_rows, cols => $nr_of_cols)
+=item new(rows => $nr_of_rows || \@rows, cols => $nr_of_cols || \@cols)
 
 Creates a new, zero filled table.
-The nr of rows and of cols must be greater than 0.
-
-The rows and columns created are 0 .. $nr_of_rows-1 and
-0 .. $nr_of_cols-1
+You can define the rows or cols with a ref to an array of the names
+of the rows/cols.
+If so, the names have to be unique.
+If you only give a number,
+the rows/cols are named C<(0 .. $nr-1)>.
 
 =item data($row,$col,$new_value)
 
@@ -195,6 +225,7 @@ or modify all values with
 =item rows(), cols()
 
 These functions are returning all rows/columns in a list.
+They are returned in the order as given with the new constructor.
 
 It's not possible to set rows/columns with them.
 
@@ -257,29 +288,35 @@ You're supposed to don't do that.
 =head2 EXPORT
 
 None by default.
+
+=head1 BUGS
+
+The store/read methods are slow.
+As I wrote the module for convienience,
+it's not so important for me,
+but I'll change it a day.
+
+It's not tested
+what happens when you try to read a misformatted table.
+Don't do that.
+
+If you work with floating point types,
+don't expect that
+$table->store('filename')->read('filename')
+reproduces exactly the same table,
+as there could be some rounding errors.
+
+I hope there aren't any more bugs.
    
 =head1 TODO
 
 =over
 
-=item Named Rows/Columns
-
-Something like this snippet:
-
-  my $table = Data::TableAutoSum->new(rows => ['New York', 'Chicago', 'L.A.'],
-                                      cols => ['male', 'female', 'alien']);
-                                      
-  $table->data('New York','male') = 1_000_000;
-  $table->data('L.A.', 'alien')   =   500_000;
-  
-  print "Aliens in U.S.A.:", $table->colresult('alien');
-  print "Inhabitants of Chicagp:", $table->rowresult('Chicago');
-
 =item options for as_string, store, read
 
 The seperator, 
 the end of line char,
-and the "Sum"-string should be changed.
+and the "Sum"-string should be changeable.
 
 =item operation
 
@@ -327,6 +364,8 @@ Something like
                                                     cols => 'alien');
 
 Quite an insert_subtable method seems sensful, too.
+
+=item increase speed of store/read
 
 =back     
 

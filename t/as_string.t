@@ -3,7 +3,8 @@
 use strict;
 use warnings;
 
-use Test::More tests => 3;
+use t'CommonStuff;
+use Test::More tests => 7;
 use Data::TableAutoSum;
 use List::Util qw/sum/;
 
@@ -23,19 +24,16 @@ use constant ONE_ROW => join "\n", (join "\t", "", 0 .. 9, "Sum"),
                                    (join "\t", "Sum", RECIPROKES, sum RECIPROKES),
                                    "";
 
-for (Data::TableAutoSum->new(rows => 1, cols => 1)) {
+for ( Data::TableAutoSum->new(rows => 1,   cols => 1), 
+      Data::TableAutoSum->new(rows => [0], cols => [0]) ) 
+{
     $_->data(0,0) = 42;
     is $_->as_string, LITTLE_TABLE, "1x1 table as string";
 }
 
-sub qt($) {
-    $_ = shift();
-    s/\t/\\t\t/g;
-    s/\n/\\n\n/g;
-    return $_;
-}
-
-for (Data::TableAutoSum->new(rows => 3, cols => 3)) {
+for ( Data::TableAutoSum->new(rows => 3,        cols => 3),
+      Data::TableAutoSum->new(rows => [0 .. 2], cols => [0 .. 2]) ) 
+{
     $_->data(0,0) = 2;  $_->data(0,1) = 9;  $_->data(0,2) = 4;
     $_->data(1,0) = 7;  $_->data(1,1) = 5;  $_->data(1,2) = 3;
     $_->data(2,0) = 6;  $_->data(2,1) = 1;  $_->data(2,2) = 8;
@@ -43,9 +41,15 @@ for (Data::TableAutoSum->new(rows => 3, cols => 3)) {
 }
 
 
-for (Data::TableAutoSum->new(rows => 1, cols => scalar(RECIPROKES))) {
+for (Data::TableAutoSum->new(rows => 1,   cols => scalar(RECIPROKES)),
+     Data::TableAutoSum->new(rows => [0], cols => [0 .. scalar(RECIPROKES)-1]) )
+{
     for my $i (0 .. scalar(RECIPROKES)-1) {
         $_->data(0,$i) = 1/($i+1);
     }
     is qt $_->as_string, qt ONE_ROW, "1x10 table as string";
 }
+
+my $table = Data::TableAutoSum->new(rows => ['Row'], cols => ['Col']);
+is qt $table->as_string, qt "\tCol\tSum\nRow\t0\t0\nSum\t0\t0\n",
+   "1x1 table with literal names";

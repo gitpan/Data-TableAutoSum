@@ -9,9 +9,30 @@ use constant STANDARD_DIM => ([    1,    1],
                               [    2,    2],
                               [    1, 1_000],
                               [1_000,     1],
-                              [   50,    50]);
+                              [   25,    75]);
                               
 my $Tester = Test::Builder->new();
+
+sub qt($) {
+    $_ = shift();
+    s/\t/\\t\t/g;
+    s/\n/\\n\n/g;
+    return $_;
+}
+
+sub _named_rows($) {
+    my $size = shift;
+    return map "Row $_", (0 .. $size-1);
+}
+
+sub _named_cols($) {
+    my $size = shift;
+    return map "Col $_", (0 .. $size-1);
+}
+
+sub round($) {
+    sprintf "%.3f", shift();
+}
 
 sub all_ok(&$$) {
 	my ($sub, $params, $test_name) = @_;

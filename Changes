@@ -1,5 +1,11 @@
 Revision history for Perl extension Data::TableAutoSum.
 
+0.04  Mon Jul 27
+        - implemented named rows/columns
+        - fixed result test to avoid floating point error
+        - fixed typo in doc
+        - removed dependendancy of Perl 5.8.0
+
 0.03  Fri Jul 26
         - implemented the 
           ->store($filename)

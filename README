@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.03
+Data/TableAutoSum version 0.04
 ==============================
 
 INSTALLATION
@@ -10,10 +10,16 @@ To install this module type the following:
    make test
    make install
    
+Note that the test can take a little time.
+At my 1.1 GHz computer,
+it needs 80 seconds.
+   
 SYNOPSIS
       use Data::TableAutoSum;
   
       my $table = Data::TableAutoSum->new(rows => 10, cols => 20);
+      # or
+      my $table = Data::TableAutoSum->new(rows => ['New York', 'L.A.', 'Chicago'],
       foreach my $row ($table->rows()) {
          foreach my $col ($table->cols()) {
             $table->data($row,$col) = rand();
@@ -57,4 +63,3 @@ COPYRIGHT AND LICENSE
 
     This library is free software; you can redistribute it and/or modify it
     under the same terms as Perl itself.
-

@@ -11,7 +11,6 @@ use t'CommonStuff;
 
 use constant TEMP_FILE => 'store_read.table';
 
-
 sub test_store_read {
     my %dim = @_;
     my $orig = Data::TableAutoSum->new(%dim);
@@ -19,8 +18,8 @@ sub test_store_read {
     
     foreach my $row ($orig->rows) {
         foreach my $col ($orig->cols) {
-            $orig->data($row,$col) = sprintf "%.2f",   # only some rounding for fix point calculation
-                                     random_uniform(1, -1_000_000, +1_000_000);
+            $orig->data($row,$col) = round   # only some rounding for fix point calculation
+                                     random_uniform(1, -1_000, +1_000);
         }
     }
     
@@ -35,12 +34,14 @@ sub test_store_read {
        "Stored table looks like the as_string representation ($DxD)";
     
     my $copy = Data::TableAutoSum->read(TEMP_FILE);
-    is $copy->as_string, $orig->as_string,
-       "Read stored table has the same as_string represantion as the original ($DxD)";
+    is qt $copy->as_string, qt $orig->as_string,
+       "Read stored table has the same as_string representantion as the original ($DxD)";
 }
 
-use Test::More tests => 3 * STANDARD_DIM + 2;
+use Test::More tests => 3 * 2 * STANDARD_DIM + 2;
 test_store_read( rows => $_->[0], cols => $_->[1] ) for STANDARD_DIM;
+test_store_read( rows => [_named_rows $_->[0]], 
+                 cols => [_named_cols $_->[1]] ) for STANDARD_DIM;
 
 throws_ok {Data::TableAutoSum->new(rows => 1, cols => 1)->store()}
           qr/can't open/i,
