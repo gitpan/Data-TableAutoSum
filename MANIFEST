@@ -1,0 +1,10 @@
+Changes
+Makefile.PL
+MANIFEST
+README
+TableAutoSum.pm
+t/1.t
+t/CommonStuff.pm
+t/constructor.t
+t/data.t
+t/result.t

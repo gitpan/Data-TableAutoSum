@@ -1,0 +1,14 @@
+Revision history for Perl extension Data::TableAutoSum.
+
+0.01  Wed Jul 24
+	- original version; created by h2xs 1.22 with options
+		-XA Data::TableAutoSum
+        - implemented
+           ->new(rows => $nr_of_rows,
+                           cols => $nr_of_cols)
+           ->data($row,$col,$new_value) : lvalue
+           ->rows()
+           ->cols()
+           ->rowresult($row)
+           ->colresult($col)
+           ->totalresult() 

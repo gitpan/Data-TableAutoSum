@@ -1,0 +1,54 @@
+Data/TableAutoSum version 0.01
+==============================
+
+INSTALLATION
+
+To install this module type the following:
+
+   perl Makefile.PL
+   make
+   make test
+   make install
+   
+SYNOPSIS
+      use Data::TableAutoSum;
+  
+      my $table = Data::TableAutoSum->new(rows => 10, cols => 20);
+      foreach my $row ($table->rows()) {
+         foreach my $col ($table->cols()) {
+            $table->data($row,$col) = rand();
+            $table->data($row,$col) += $table->data($row-1,$col-1) 
+                if $row >= 1 && $col >= 1;
+         }
+      }
+  
+      print "Row $_ has result: ",$table->rowresult($_) for $table->rows();
+      print "Col $_ has result: ",$table->colresult($_) for $table->cols();
+      print "Table has the total result: ",$table->totalresult();   
+
+REQUIREMENTS
+       Params::Validate
+       Regexp::Common
+       Set::Scalar
+       List::Util 
+       
+       Math::Random            # for the tests
+       Set::CrossProduct  
+       Data::Dumper       
+
+       Test::More         
+       Test::Exception    
+       Test::Builder
+
+SEE ALSO
+    Data::Xtab, Data::Pivot, Table::Pivoter
+
+AUTHOR
+    Janek Schleicher, <bigj@kamelfreund.de>
+
+COPYRIGHT AND LICENSE
+    Copyright 2002 by Janek Schleicher
+
+    This library is free software; you can redistribute it and/or modify it
+    under the same terms as Perl itself.
+
