@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.04
+Data/TableAutoSum version 0.05
 ==============================
 
 INSTALLATION
@@ -27,6 +27,8 @@ SYNOPSIS
                 if $row >= 1 && $col >= 1;
          }
       }
+
+      $table->change(sub {$_ = int ($_ / 10)}); # World War III perhaps
   
       print "Row $_ has result: ",$table->rowresult($_) for $table->rows();
       print "Col $_ has result: ",$table->colresult($_) for $table->cols();

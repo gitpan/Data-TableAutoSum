@@ -10,3 +10,4 @@ t/data.t
 t/result.t
 t/as_string.t
 t/store_read.t
+t/change.t

@@ -9,7 +9,7 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.04';
+our $VERSION = '0.05';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
@@ -134,6 +134,17 @@ sub read {
     return $table;
 }
 
+sub change {
+    my ($self, $sub) = @_;
+    foreach my $row ($self->rows) {
+        foreach my $col ($self->cols) {
+            local $_ = $self->data($row,$col);
+            &$sub;
+            $self->data($row,$col) = $_;
+        }
+    }
+}
+
 sub _calc_data {
     my $result = $_[0];
     $result += $_[$_] for (1 .. $#_);
@@ -169,6 +180,7 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
   # or
   my $table = Data::TableAutoSum->new(rows => ['New York', 'L.A.', 'Chicago'],
                                       cols => ['Women', 'Men', 'Alien']);
+
   foreach my $row ($table->rows()) {
      foreach my $col ($table->cols()) {
         $table->data($row,$col) = rand();
@@ -176,6 +188,8 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
             if $row >= 1 && $col >= 1;
      }
   }
+  
+  $table->change(sub {$_ = int ($_ / 10)}); # World War III perhaps
   
   print "Row $_ has result: ",$table->rowresult($_) for $table->rows();
   print "Col $_ has result: ",$table->colresult($_) for $table->cols();
@@ -283,6 +297,13 @@ I didn't test what happens,
 using wrong formated files or similar.
 You're supposed to don't do that.
 
+=item $table->change(CODE)
+
+Changes every table element with the given code.
+Note that you have to change C<$_>,
+so C<$table->change(sub {$_ *= 2})> doubles every element,
+while C<$table->change(sub { 2 * $_ })> doesn't change anything.
+
 =back
 
 =head2 EXPORT
@@ -325,13 +346,6 @@ at the moment, only '+' is used.
 I'd like to give the possibility to use any other distributive, associative 
 operation.
 
-=item change
-
-A possibility to make something with all data elements,
-like
-
-  $table->change(sub {$_ *= 2});
-  
 =item merge
 
 A static merging method,

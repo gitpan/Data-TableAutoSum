@@ -1,6 +1,9 @@
 Revision history for Perl extension Data::TableAutoSum.
 
-0.04  Mon Jul 27
+0.05  Tue Jul 30
+        - implemented change(\&change_method) method
+
+0.04  Mon Jul 29
         - implemented named rows/columns
         - fixed result test to avoid floating point error
         - fixed typo in doc
