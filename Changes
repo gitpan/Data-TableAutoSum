@@ -1,5 +1,12 @@
 Revision history for Perl extension Data::TableAutoSum.
 
+0.03  Fri Jul 26
+        - implemented the 
+          ->store($filename)
+          ->read($filename)
+          methods
+        - added Tie::File to the requirements
+
 0.02  Thu Jul 25
         - implemented ->as_string method without any arguments
 

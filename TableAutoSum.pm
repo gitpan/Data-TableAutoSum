@@ -10,12 +10,13 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
 use Set::Scalar;
 use List::Util qw/reduce/;
+use Tie::File;
 
 use constant ROW_COL_TYPE => {
     type      => SCALAR,
@@ -78,6 +79,35 @@ sub as_string {
     return $output;
 }
 
+sub store {
+    my ($self, $filename) = @_;
+    open FILE, ">$filename" or die "Can't open $filename to store the table: $!";
+    print FILE $self->as_string;
+    close FILE;
+    return $self;
+}
+
+sub read {
+    my ($class, $filename) = @_;
+    tie my @data, 'Tie::File', $filename
+        or die "Can't open $filename to read the table: $!";
+    
+    my $nr_of_rows   = @data - 2;  # first line is header, last are sums
+    my @header       = split /\t/, $data[0];
+    my $nr_of_cols   = @header - 2;  # 1st col is row names, last are sums
+    my $table        = $class->new(rows => $nr_of_rows, cols => $nr_of_cols);
+    
+    foreach my $row ($table->rows) {
+        my @line = split /\t/, $data[$row+1];
+        foreach my $col ($table->cols) {
+            $table->data($row,$col) = $line[$col+1];
+        }
+    }
+        
+    untie @data;
+    return $table;
+}
+
 sub _calc_data {
     my $result = $_[0];
     $result += $_[$_] for (1 .. $#_);
@@ -123,6 +153,9 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
   print "Table has the total result: ",$table->totalresult();
 
   print "Let's have a look to the whole table:\n", $table->as_string;
+
+  $table->store('random.dat');
+  my $old_random_data = Data::TableAutoSum->read('random.dat');
 
 =head1 ABSTRACT
 
@@ -199,6 +232,26 @@ A typical example could be:
 The string is a multiline string,
 the elements of the table are seperated with a tab.
 
+=item store($filename)
+
+Stores the table in a readable format (the same as used by as_string)
+into the specified file.
+
+C<store> returns the table object itselfs,
+so you can use it in the fashion way:
+
+  print "Stored the table\n", $table->store($filename)->as_string;
+
+=item Data::TableAutoSum->read($filename)
+
+Constructs a table found in the filename.
+It expects a table of the format written by store,
+what is the same like written with as_string.
+
+I didn't test what happens,
+using wrong formated files or similar.
+You're supposed to don't do that.
+
 =back
 
 =head2 EXPORT
@@ -222,15 +275,11 @@ Something like this snippet:
   print "Aliens in U.S.A.:", $table->colresult('alien');
   print "Inhabitants of Chicagp:", $table->rowresult('Chicago');
 
-=item options for as_string
+=item options for as_string, store, read
 
 The seperator, 
 the end of line char,
-and the "Sum"-string could be changed.
-
-=item store/read
-
-Some methods to store and read a table to/from a file.
+and the "Sum"-string should be changed.
 
 =item operation
 
@@ -287,6 +336,7 @@ Quite an insert_subtable method seems sensful, too.
    Regexp::Common
    Set::Scalar
    List::Util 
+   Tie::File
        
    Math::Random            # for the tests
    Set::CrossProduct  

@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.02
+Data/TableAutoSum version 0.03
 ==============================
 
 INSTALLATION
@@ -28,11 +28,15 @@ SYNOPSIS
 
       print "Let's have a look to the whole table:\n", $table->as_string;
 
+      $table->store('random.dat');
+      my $old_random_data = Data::TableAutoSum->read('random.dat');
+
 REQUIREMENTS
        Params::Validate
        Regexp::Common
        Set::Scalar
        List::Util 
+       Tie::File
        
        Math::Random            # for the tests
        Set::CrossProduct  

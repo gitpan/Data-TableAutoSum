@@ -10,6 +10,7 @@ WriteMakefile(
        Regexp::Common     => 0,
        Set::Scalar        => 0,
        List::Util         => 0,
+       Tie::File          => 0,
        
        Math::Random       => 0,     # for the tests
        Set::CrossProduct  => 0,
