@@ -8,3 +8,4 @@ t/CommonStuff.pm
 t/constructor.t
 t/data.t
 t/result.t
+t/as_string.t

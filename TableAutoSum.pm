@@ -10,7 +10,7 @@ our @ISA = qw(Exporter);
 
 # I export nothing, so there aren't any @EXPORT* declarations
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 use Params::Validate qw/:all/;
 use Regexp::Common;
@@ -65,6 +65,19 @@ sub data : lvalue {
     $self->{data}->[$row]->[$col];
 }
 
+sub as_string {
+    my $self = shift;
+    my $output = join "\t", "", $self->cols, "Sum\n";
+    foreach my $row ($self->rows) {
+        $output .= $row . "\t";
+        $output .= join "\t", map {$self->data($row,$_)} ($self->cols);
+        $output .= "\t" . $self->rowresult($row) . "\n";
+    }
+    $output .= join "\t", "Sum", map {$self->colresult($_)} $self->cols;
+    $output .= "\t" . $self->totalresult . "\n";
+    return $output;
+}
+
 sub _calc_data {
     my $result = $_[0];
     $result += $_[$_] for (1 .. $#_);
@@ -108,6 +121,8 @@ Data::TableAutoSum - Table that calculates the results of rows and cols automati
   print "Row $_ has result: ",$table->rowresult($_) for $table->rows();
   print "Col $_ has result: ",$table->colresult($_) for $table->cols();
   print "Table has the total result: ",$table->totalresult();
+
+  print "Let's have a look to the whole table:\n", $table->as_string;
 
 =head1 ABSTRACT
 
@@ -170,6 +185,20 @@ totalresult is equal to the sum of all rowresults or the sum of all colresults
 You can't change the result directly.
 Change the table data for that.
 
+=item as_string()
+
+Returns a string representation of the table.
+A typical example could be:
+
+        0     1    2   Sum
+  0     2     9    4    15
+  1     7     5    3    15
+  2     6     1    8    15
+  Sum  15    15   15    45
+
+The string is a multiline string,
+the elements of the table are seperated with a tab.
+
 =back
 
 =head2 EXPORT
@@ -193,17 +222,11 @@ Something like this snippet:
   print "Aliens in U.S.A.:", $table->colresult('alien');
   print "Inhabitants of Chicagp:", $table->rowresult('Chicago');
 
-=item as_string
+=item options for as_string
 
-Well, I'll need an as_string method,
-which will output a table in a crosstable style,
-e.g.
-
-        1     2    3   Sum
-  0     2     9    4    15
-  1     7     5    3    15
-  2     6     1    8    15
-  Sum  15    15   15    45
+The seperator, 
+the end of line char,
+and the "Sum"-string could be changed.
 
 =item store/read
 
@@ -216,7 +239,7 @@ at the moment, only '+' is used.
 I'd like to give the possibility to use any other distributive, associative 
 operation.
 
-=item do
+=item change
 
 A possibility to make something with all data elements,
 like

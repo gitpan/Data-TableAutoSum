@@ -1,4 +1,4 @@
-Data/TableAutoSum version 0.01
+Data/TableAutoSum version 0.02
 ==============================
 
 INSTALLATION
@@ -25,6 +25,8 @@ SYNOPSIS
       print "Row $_ has result: ",$table->rowresult($_) for $table->rows();
       print "Col $_ has result: ",$table->colresult($_) for $table->cols();
       print "Table has the total result: ",$table->totalresult();   
+
+      print "Let's have a look to the whole table:\n", $table->as_string;
 
 REQUIREMENTS
        Params::Validate
